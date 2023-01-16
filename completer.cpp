@@ -16,7 +16,7 @@ static void label(Node *node, int &id) {
   if (!node) return;
 
   cout << "\tNode" << id << "[label=\"";
-  cout << ((node->chr == '\0') ? '~' : node->chr);
+  cout << ((node->chr <= 0) ? '~' : node->chr);
   cout << "\"]\n";
 }
 
@@ -56,7 +56,7 @@ class Completer {
   Completer() : root(nullptr) { this->init(); }
 
   void init() {
-    if (!root) root = new Node('@');
+    if (!root) root = new Node(-1);
   }
   void insert_word(Node *node, char *word, int len) {
     if (!node || len < 0) return;
@@ -74,14 +74,14 @@ class Completer {
 
   void insert_word(char *word) { insert_word(root, word, strlen(word)); }
 
-  void show_suggestions(Node *node, string word) {
+  void show_completions(Node *node, string word, string prefix) {
     if (!node) return;
     if (node && node->chr == '\0') {
-      cout << "- " << word << endl;
+      cout << "- " << prefix.substr(0, prefix.size() - 1) << word << endl;
       return;
     }
 
-    for (auto child : node->children) show_suggestions(child, word + string(1, node->chr));
+    for (auto child : node->children) show_completions(child, word + string(1, node->chr), prefix);
   }
 
   Node *find(Node *node, const char *chr) {
@@ -89,17 +89,15 @@ class Completer {
     if (!node) return nullptr;
     auto it = find_if(node->children.begin(), node->children.end(), [chr](Node *x) { return x->chr == *chr; });
 
-    if (it != node->children.end())
-    {
-        cout << node->chr << endl;
-    return find(*it, chr + 1);
+    if (it != node->children.end()) {
+      return find(*it, chr + 1);
     }
     return nullptr;
   }
 };
 
-void load_command(Completer &suggestor) {
-  char *path = strdup(getenv("PATH"));
+void load_commands(Completer &suggestor) {
+  char *path = strdup("/bin");
 
   char *token = strtok(path, ":");
 
@@ -122,17 +120,17 @@ void load_command(Completer &suggestor) {
 };
 
 int main() {
-  Completer suggestor;
-  load_command(suggestor);
+  Completer completer;
+  load_commands(completer);
 
-  while (true) {
-    string word;
-    cout << ">> ";
-    cin >> word;
-    if (!cin.good()) break;
-    auto found = suggestor.find(suggestor.root, word.c_str());
+  dump_dot(completer.root);
+  // while (true) {
+  //   string prefix;
 
-    suggestor.show_suggestions(found, "");
-  }
-  // dump_dot(suggestor.root);
+  //   cout << ">> ";
+  //   cin >> prefix;
+  //   if (!cin.good()) break;
+  //   auto found = completer.find(completer.root, prefix.c_str());
+  //   completer.show_completions(found, "", prefix);
+  // }
 }
