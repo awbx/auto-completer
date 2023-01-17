@@ -2,6 +2,8 @@
 
 SRC = completer.cpp utils.cpp
 
+HEADER = completer.hpp
+
 OBJ = $(SRC:%.cpp=%.o)
 
 all: $(OBJ)
