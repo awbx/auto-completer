@@ -64,14 +64,13 @@ void load_commands(Completer &suggestor) {
     closedir(dir);
     token = strtok(NULL, ":");
   };
+  free(path);
 };
 
 void load_words(Completer &completer, const string &filename) {
-
   fstream file(filename, ios::in);
 
   if (!file.good()) {
-   
     perror(filename.c_str());
     exit(1);
   }

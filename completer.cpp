@@ -32,11 +32,33 @@ void Completer::insert_word(const string &word) { insert_word(root, word.c_str()
 void Completer::display_paths(Node *node, string word, const string &prefix) {
   if (!node) return;
   if (node && node->chr == '\0') {
-    cout << "- " << prefix.substr(0, prefix.size() - 1) << word << endl;
+    cout << "- " << prefix.substr(0, prefix.size() - 1 < 0 ? 0 : prefix.size() - 1) << word << endl;
     return;
   }
 
-  for (auto child : node->children) display_paths(child, word + string(1, node->chr), prefix);
+  for (auto child : node->children) display_paths(child, (word[0] == -1 ? "" : word) + string(1, node->chr), prefix);
+}
+
+void Completer::get_completions(Node *node, string word, vector<string> &words, const string &prefix) {
+  if (!node) return;
+  if (node && node->chr == '\0') {
+    words.push_back(prefix.substr(0, prefix.size() - 1) + word);
+    return;
+  }
+
+  for (auto child : node->children) get_completions(child, (word[0] == -1 ? "" : word) + string(1, node->chr), words, prefix);
+}
+
+char **Completer::get_completions(string word) {
+  vector<string> words;
+
+  get_completions(find(root, word.c_str()), "", words, word);
+
+  char **completion_words = new char *[words.size() + 1];
+  int    idx = 0;
+  for (auto w : words) completion_words[idx++] = strdup(w.c_str());
+  completion_words[idx] = NULL;
+  return completion_words;
 }
 
 Node *Completer::find(Node *node, const char *chr) {
@@ -54,14 +76,30 @@ void Completer::show_completions(string prefix) {
   display_paths(found, "", prefix);
 }
 
-int main(int ac, char **av) {
-  Completer completer;
+Completer completer;
 
+char *command_generator(const char *str, int state) {
+  static char **words = completer.get_completions(string(str));
+
+  if (!*words && !state) words = completer.get_completions(string(str));
+  if (!*words && state) return NULL;
+
+  return *(words++);
+}
+
+char **command_completion(const char *text, int start, int end) {
+  rl_attempted_completion_over = 1;
+
+  return rl_completion_matches(text, command_generator);
+}
+
+int main(int ac, char **av) {
   if (ac > 1)
     for (size_t idx = 1; idx < ac; idx++) load_words(completer, string(av[idx]));
   else
     load_commands(completer);
 
+  rl_attempted_completion_function = command_completion;
   while (true) {
     char *line = readline("complete : ");
     if (!line) break;
@@ -70,7 +108,7 @@ int main(int ac, char **av) {
     if (prefix == "tree")
       dump_dot(completer.root);
     else
-      completer.show_completions(prefix);
+      cout << "prefix -> " << prefix << endl;
     free(line);
   }
 }

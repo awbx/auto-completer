@@ -24,12 +24,14 @@ class Completer {
   Completer();
   ~Completer();
 
-  void  init();
-  void  insert_word(Node *, const char *, int);
-  void  insert_word(const string &);
-  void  display_paths(Node *, string, const string &);
-  void  show_completions(string);
-  Node *find(Node *, const char *);
+  void   init();
+  void   insert_word(Node *, const char *, int);
+  void   insert_word(const string &);
+  void   display_paths(Node *, string, const string &);
+  void   get_completions(Node *, string, vector<string> &, const string &);
+  char **get_completions(string);
+  void   show_completions(string);
+  Node  *find(Node *, const char *);
 };
 
 // utils prototypes
