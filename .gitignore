@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++
 
+# ignore .vscode setting
+.vscode/*
+
 ### C++ ###
 # Prerequisites
 *.d
