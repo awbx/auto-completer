@@ -67,10 +67,15 @@ void load_commands(Completer &suggestor) {
   free(path);
 };
 
+#include <sys/stat.h>
+
 void load_words(Completer &completer, const string &filename) {
   fstream file(filename, ios::in);
 
-  if (!file.good()) {
+  struct stat state;
+  stat(filename.c_str(), &state);
+  errno = S_ISDIR(state.st_mode) ? EISDIR : errno;
+  if (!file.good() || errno != 0) {
     perror(filename.c_str());
     exit(1);
   }
